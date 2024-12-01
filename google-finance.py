@@ -13,6 +13,11 @@ def handle_cookie_window(browser):
     button.click() # click reject all
 
 
+def parse_links(links):
+    for a in links:
+        href = a.get_attribute("href")
+        if href != None and href.startswith("https://www.google.com/finance/quote/"):
+            print_instrument(parse_link(a))            
 
 def parse_link(a): 
     #a.screenshot("link.png")    
@@ -21,7 +26,7 @@ def parse_link(a):
     instrument = data[0]
     value = data[1]
     movement = data[2]
-    movement2 = data[3] # per day ??
+    movement2 = data[3]
     return (instrument, value, movement, movement2)
 
 def print_instrument(i):
@@ -58,18 +63,12 @@ for div in c_wiz_divs:
 print("Currencies")
 currency_div.click()
 links = c_wiz.find_elements(By.TAG_NAME, "a")
-for a in links:
-    href = a.get_attribute("href")
-    if href != None and href.startswith("https://www.google.com/finance/quote/"):
-        print_instrument(parse_link(a))
+parse_links(links)
 
 print("")
 print("Crypto")
 crypto_div.click()
 links = c_wiz.find_elements(By.TAG_NAME, "a")
-for a in links:
-    href = a.get_attribute("href")
-    if href != None and href.startswith("https://www.google.com/finance/quote/"):
-        print_instrument(parse_link(a))        
+parse_links(links)
 
 browser.quit()
