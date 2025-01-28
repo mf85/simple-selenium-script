@@ -15,15 +15,13 @@ def handle_cookie_window(browser):
 
 
 def parse_links(links):
-    data = []
-    row_names = []
+    data = []    
     for a in links:
         href = a.get_attribute("href")
         if href != None and href.startswith("https://www.google.com/finance/quote/"):
-            d = parse_link(a)
-            row_names.append(d[0])
-            data.append(d[1:])
-    return (row_names, data)
+            d = parse_link(a)            
+            data.append(d)
+    return data
 
 def parse_link(a): 
     #a.screenshot("link.png")    
@@ -74,9 +72,9 @@ except ModuleNotFoundError:
 currency_div.click()
 links = c_wiz.find_elements(By.TAG_NAME, "a")
 currencies = parse_links(links)
-df = pd.DataFrame(currencies[1], index = currencies[0])
-df.index.name = "Currency"
-df.columns = ["price", "movement in %", "movement"]
+df = pd.DataFrame(currencies)
+df.columns = ["Currency", "price", "movement in %", "movement"]
+df.set_index("Currency", inplace=True)
 print(df.to_markdown()) if tab else print(df.to_string())
 
 print("")
@@ -84,9 +82,9 @@ print("")
 crypto_div.click()
 links = c_wiz.find_elements(By.TAG_NAME, "a")
 crypto = parse_links(links)
-df = pd.DataFrame(crypto[1], index = crypto[0])
-df.index.name = "CryptoCurrency"
-df.columns = [ "price", "movement in %", "movement"]
+df = pd.DataFrame(crypto)
+df.columns = [ "CryptoCurrency", "price", "movement in %", "movement"]
+df.set_index("CryptoCurrency", inplace=True)
 print(df.to_markdown()) if tab else print(df.to_string())
 
 browser.quit()
