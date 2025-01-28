@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -14,10 +15,15 @@ def handle_cookie_window(browser):
 
 
 def parse_links(links):
+    data = []
+    row_names = []
     for a in links:
         href = a.get_attribute("href")
         if href != None and href.startswith("https://www.google.com/finance/quote/"):
-            print_instrument(parse_link(a))            
+            d = parse_link(a)
+            row_names.append(d[0])
+            data.append(d[1:])
+    return (row_names, data)
 
 def parse_link(a): 
     #a.screenshot("link.png")    
@@ -29,9 +35,6 @@ def parse_link(a):
     movement2 = data[3]
     return (instrument, value, movement, movement2)
 
-def print_instrument(i):
-    print(f"{i[0]} - {i[1]}  {i[2]}  {i[3]}")
-
 
 # hide broswer
 os.environ['MOZ_HEADLESS'] = '1'
@@ -40,7 +43,7 @@ browser = webdriver.Firefox()
 #chrome_options = webdriver.ChromeOptions()
 #chrome_options.add_argument("--headless")
 #driver = webdriver.Chrome(options=chrome_options)
-##browser = webdriver.Chrome()
+#browser = webdriver.Chrome()
 
 browser.get("https://www.google.com/finance/")
 
@@ -60,15 +63,30 @@ for div in c_wiz_divs:
     if currency_div != None and crypto_div != None:
         break
 
-print("Currencies")
+
+tab = False
+try:
+    import tabulate
+    tab = True
+except ModuleNotFoundError:
+    pass
+
 currency_div.click()
 links = c_wiz.find_elements(By.TAG_NAME, "a")
-parse_links(links)
+currencies = parse_links(links)
+df = pd.DataFrame(currencies[1], index = currencies[0])
+df.index.name = "Currency"
+df.columns = ["price", "movement in %", "movement"]
+print(df.to_markdown()) if tab else print(df.to_string())
 
 print("")
-print("Crypto")
+
 crypto_div.click()
 links = c_wiz.find_elements(By.TAG_NAME, "a")
-parse_links(links)
+crypto = parse_links(links)
+df = pd.DataFrame(crypto[1], index = crypto[0])
+df.index.name = "CryptoCurrency"
+df.columns = [ "price", "movement in %", "movement"]
+print(df.to_markdown()) if tab else print(df.to_string())
 
 browser.quit()
